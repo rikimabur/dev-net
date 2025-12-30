@@ -12,15 +12,20 @@ namespace EshopInfrastructure.Repositories
         {
             _context = context;
         }
+
+        public async Task<Order?> GetByIdAsync(Guid id)
+        => await _context.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id);
+
         public async Task AddAsync(Order order)
         {
             await _context.Orders.AddAsync(order);
             await _context.SaveChangesAsync();
         }
-        public async Task<Order?> GetByIdAsync(Guid id)
+
+        public async Task UpdateAsync(Order order)
         {
-            // eager load _items collection
-            return await _context.Orders.Include("_items").FirstOrDefaultAsync(x => x.Id == id);
+            _context.Orders.Update(order);
+            await _context.SaveChangesAsync();
         }
     }
 }

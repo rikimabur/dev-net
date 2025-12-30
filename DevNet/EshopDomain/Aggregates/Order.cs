@@ -1,17 +1,13 @@
-﻿using EshopDomain.Entities;
+﻿using EshopDomain.Common;
 using EshopDomain.Events;
 using EshopDomain.ValueObjects;
 
 namespace EshopDomain.Aggregates
 {
-    public class Order : Entity
+    public class Order : AggregateRoot
     {
-        public Guid Id { get; private set; }
         private readonly List<OrderItem> _items = new();
         public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
-
-        private readonly List<IDomainEvent> _domainEvents = new();
-        public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents;
 
         public Email CustomerEmail { get; private set; }
         public DateTime CreatedAt { get; private set; }
@@ -26,6 +22,7 @@ namespace EshopDomain.Aggregates
         public static Order Create(string email)
         {
             var order = new Order(Email.Create(email));
+            order.AddEvent(new OrderCreatedEvent(order.Id, email));
             return order;
         }
 
@@ -39,9 +36,9 @@ namespace EshopDomain.Aggregates
                 throw new InvalidOperationException("Product name is required");
 
             _items.Add(new OrderItem(productName, price, quantity));
+            AddEvent(new OrderItemAddedEvent(Id, productName, quantity, price));
         }
 
         public decimal Total() => _items.Sum(x => x.Price * x.Quantity);
-
     }
 }

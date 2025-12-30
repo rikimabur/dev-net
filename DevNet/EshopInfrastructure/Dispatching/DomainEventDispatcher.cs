@@ -1,11 +1,11 @@
-﻿using EshopDomain.Events;
+﻿using EshopApplication.Abstractions;
+using EshopDomain.Common;
 using MediatR;
 
-namespace EshopInfrastructure.Events
+namespace EshopInfrastructure.Dispatching
 {
     public class DomainEventDispatcher(IMediator mediator) : IDomainEventDispatcher
     {
-     
         public Task DispatchAsync(IDomainEvent domainEvent)
         {
             return mediator.Publish(domainEvent);

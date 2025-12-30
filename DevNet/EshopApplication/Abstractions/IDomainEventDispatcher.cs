@@ -1,4 +1,7 @@
-﻿namespace EshopDomain.Events
+﻿
+using EshopDomain.Common;
+
+namespace EshopApplication.Abstractions
 {
     public interface IDomainEventDispatcher
     {
