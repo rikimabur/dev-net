@@ -1,0 +1,10 @@
+﻿@baseUrl = https://localhost:7208
+@username = apiuser
+
+### Login Public JWT
+POST {{baseUrl}}/auth/login/public
+Content-Type: application/json
+
+{
+  "username": "{{username}}"
+}

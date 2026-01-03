@@ -1,0 +1,34 @@
+﻿{
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5076",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7000;http://localhost:5076",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  },
+  "JwtPublic": {
+    "Issuer": "https://public-api",
+    "Audience": "public-clients",
+    "Key": "public-secret"
+  },
+  "JwtInternal": {
+    "Issuer": "https://internal",
+    "Audience": "internal-services",
+    "Key": "internal-secret"
+  }
+}

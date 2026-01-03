@@ -1,0 +1,6 @@
+@multiple_authentication_schemes_HostAddress = http://localhost:5076
+
+GET {{multiple_authentication_schemes_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
