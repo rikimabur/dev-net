@@ -7,6 +7,10 @@ public interface IMediator
     Task<TResponse> SendAsync<TResponse>(
         IRequest<TResponse> request,
         CancellationToken cancellationToken = default);
+    Task PublishAsync<TNotification>(
+    TNotification notification,
+    CancellationToken cancellationToken = default)
+    where TNotification : INotification;
 }
 public class Mediator : IMediator
 {
@@ -17,6 +21,22 @@ public class Mediator : IMediator
     {
         _serviceProvider = serviceProvider;
         _handlerInvokerCache = new ConcurrentDictionary<Type, object>();
+    }
+
+    public async Task PublishAsync<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
+    {
+        var notificationType = notification.GetType();
+        var handlerType = typeof(INotificationHandler<>).MakeGenericType(notificationType);
+
+        var handlers = _serviceProvider.GetServices(handlerType);
+
+        var tasks = handlers.Select(handler =>
+        {
+            var handleMethod = handlerType.GetMethod("HandleAsync")!;
+            return (Task)handleMethod.Invoke(handler, [notification, cancellationToken])!;
+        });
+
+        await Task.WhenAll(tasks);
     }
 
     public async Task<TResponse> SendAsync<TResponse>(
@@ -33,7 +53,7 @@ public class Mediator : IMediator
         return await handlerInvoker(request, _serviceProvider, cancellationToken);
 
     }
-    private Func<object, object, CancellationToken, Task<TResponse>>CreateCompiledInvoker<TResponse>(Type requestType)
+    private Func<object, object, CancellationToken, Task<TResponse>> CreateCompiledInvoker<TResponse>(Type requestType)
     {
         var responseType = typeof(TResponse);
         var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, responseType);
@@ -95,6 +115,11 @@ public class MediatorV2 : IMediator
     {
         _serviceProvider = serviceProvider;
         _handlerInvokerCache = [];
+    }
+
+    public Task PublishAsync<TNotification>(TNotification notification, CancellationToken cancellationToken = default) where TNotification : INotification
+    {
+        throw new NotImplementedException();
     }
 
     public async Task<TResponse> SendAsync<TResponse>(
