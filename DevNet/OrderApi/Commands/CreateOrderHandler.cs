@@ -1,11 +1,21 @@
-﻿using OrderApi.Mediator;
+﻿using FluentValidation;
+using OrderApi.Mediator;
 using OrderApi.Notifications;
 
 namespace OrderApi.Commands;
 public record CreateOrderCommand(string CustomerId) : IRequest<CreateOrderResponse>;
 public record CreateOrderResponse(Guid OrderId);
+public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
+{
+    public CreateOrderCommandValidator()
+    {
+        RuleFor(x => x.CustomerId)
+            .NotEmpty()
+            .WithMessage("Customer ID is required");
+    }
+}
 
-public class CreateOrderHandler(IMediator mediator) : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
+    public class CreateOrderHandler(IMediator mediator) : IRequestHandler<CreateOrderCommand, CreateOrderResponse>
 {
     public async Task<CreateOrderResponse> HandleAsync(CreateOrderCommand command, CancellationToken cancellationToken)
     {

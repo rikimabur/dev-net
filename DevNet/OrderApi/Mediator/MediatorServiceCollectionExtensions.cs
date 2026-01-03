@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
-
+using FluentValidation;
+using OrderApi.Behaviors;
 namespace OrderApi.Mediator
 {
     public static class MediatorServiceCollectionExtensions
@@ -8,8 +9,14 @@ namespace OrderApi.Mediator
         {
             services.AddSingleton<IMediator, Mediator>();
             RegisterHandlers(services, assemblies, typeof(IRequestHandler<,>));
-            RegisterHandlers(services, assemblies, typeof(INotificationHandler<>));
-          
+            RegisterHandlers(services, assemblies, typeof(IPipelineBehavior<,>));
+            //RegisterHandlers(services, assemblies, typeof(INotificationHandler<>));
+
+
+            // Register validators from FluentValidation
+            services.AddValidatorsFromAssemblies(assemblies);
+            // Register the validation behavior as an open generic
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
             return services;
         }

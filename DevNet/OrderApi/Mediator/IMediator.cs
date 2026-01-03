@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using OrderApi.Behaviors;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
 
 namespace OrderApi.Mediator;
@@ -44,14 +45,57 @@ public class Mediator : IMediator
         CancellationToken cancellationToken = default)
     {
         var requestType = request.GetType();
-        var handlerInvoker = (Func<IRequest<TResponse>, IServiceProvider, CancellationToken, Task<TResponse>>)
-                  _handlerInvokerCache.GetOrAdd(requestType, rt =>
-                  {
-                      return CreateHandlerInvoker<TResponse>(rt);
-                  });
+        //var handlerInvoker = (Func<IRequest<TResponse>, IServiceProvider, CancellationToken, Task<TResponse>>)
+        //          _handlerInvokerCache.GetOrAdd(requestType, rt =>
+        //          {
+        //              return CreateHandlerInvoker<TResponse>(rt);
+        //          });
 
-        return await handlerInvoker(request, _serviceProvider, cancellationToken);
+        //return await handlerInvoker(request, _serviceProvider, cancellationToken);
 
+
+        var responseType = typeof(TResponse);
+
+        // Get the handler
+        var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, responseType);
+        var handler = _serviceProvider.GetService(handlerType)
+            ?? throw new InvalidOperationException(
+                $"No handler registered for request type {requestType.Name}");
+
+        // Get all pipeline behaviors for this request type
+        var behaviorType = typeof(IPipelineBehavior<,>).MakeGenericType(requestType, responseType);
+        var behaviors = _serviceProvider
+            .GetServices(behaviorType)
+            .Cast<object>()
+            .Reverse()
+            .ToList();
+
+        // Build the pipeline
+        var handleMethod = handlerType.GetMethod("HandleAsync")!;
+        RequestHandlerDelegate<TResponse> pipeline = () =>
+        {
+            var task = (Task<TResponse>)handleMethod.Invoke(
+                handler,
+                [request, cancellationToken])!;
+            return task;
+        };
+
+        // Wrap with behaviors (in reverse order so first registered runs first)
+        foreach (var behavior in behaviors)
+        {
+            var currentPipeline = pipeline;
+            var behaviorHandleMethod = behaviorType.GetMethod("HandleAsync")!;
+
+            pipeline = () =>
+            {
+                var task = (Task<TResponse>)behaviorHandleMethod.Invoke(
+                    behavior,
+                    [request, currentPipeline, cancellationToken])!;
+                return task;
+            };
+        }
+
+        return await pipeline();
     }
     private Func<object, object, CancellationToken, Task<TResponse>> CreateCompiledInvoker<TResponse>(Type requestType)
     {
