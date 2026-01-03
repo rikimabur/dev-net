@@ -1,0 +1,16 @@
+@baseUrl = http://localhost:5028
+@orderId = 00000000-0000-0000-0000-000000000000
+### Create Order
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "customerId": "Test"
+}
+
+###
+
+### Get Order by Id
+GET {{baseUrl}}/api/orders/{{orderId}}
+Accept: application/json
+###
