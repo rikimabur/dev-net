@@ -9,7 +9,7 @@ namespace OrderApi.Mediator
         {
             services.AddSingleton<IMediator, Mediator>();
             RegisterHandlers(services, assemblies, typeof(IRequestHandler<,>));
-            RegisterHandlers(services, assemblies, typeof(IPipelineBehavior<,>));
+            //RegisterHandlers(services, assemblies, typeof(IPipelineBehavior<,>));
             //RegisterHandlers(services, assemblies, typeof(INotificationHandler<>));
 
 
@@ -17,6 +17,7 @@ namespace OrderApi.Mediator
             services.AddValidatorsFromAssemblies(assemblies);
             // Register the validation behavior as an open generic
             services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 
             return services;
         }
@@ -26,15 +27,17 @@ namespace OrderApi.Mediator
                 .SelectMany(a => a.GetTypes())
                 .Where(t => t.IsClass && !t.IsAbstract)
                 .Where(t => t.GetInterfaces().Any(i =>
-                    i.IsGenericType && i.GetGenericTypeDefinition() == genericHandlerType))
-                .ToList();
+                    i.IsGenericType && i.GetGenericTypeDefinition() == genericHandlerType));
 
             foreach (var handlerType in handlerTypes)
             {
-                var interfaceType = handlerType.GetInterfaces()
-                    .First(i => i.IsGenericType && i.GetGenericTypeDefinition() == genericHandlerType);
-
-                services.AddTransient(interfaceType, handlerType);
+                var interfaces = handlerType
+                                        .GetInterfaces()
+                                        .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == genericHandlerType);
+                foreach (var interfaceType in interfaces)
+                {
+                    services.AddTransient(interfaceType, handlerType);
+                }
             }
         }
     }

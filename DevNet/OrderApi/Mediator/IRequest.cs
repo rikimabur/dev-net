@@ -9,4 +9,9 @@
     {
         Task<TResponse> HandleAsync(TRequest request, CancellationToken cancellationToken);
     }
+    public interface ICacheableRequest<TResponse> : IRequest<TResponse>
+    {
+        string CacheKey { get; }
+        TimeSpan? CacheDuration { get; }
+    }
 }
