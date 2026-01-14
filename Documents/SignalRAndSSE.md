@@ -20,3 +20,13 @@ builder.Services.AddSignalR();
 //Exposes the Hub as an endpoint
 app.MapHub<ChatHub>("{you name expect}");
 ```
+# 2. SSE (Server-Sent Events)
+## What is SSE (Server-Sent Events)?
+
+SSE allows the server to push data to the client over HTTP using a one-way connection (server ➜ client).
+
+## Beneficial
+- Live notifications
+- Live logs
+- Stock prices
+- Real-time dashboards

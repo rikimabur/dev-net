@@ -1,8 +1,10 @@
+using Server_Sent_Events.Controllers;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddSingleton<MetricsGenerator>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

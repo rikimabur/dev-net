@@ -5,4 +5,22 @@
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <ul id="metrics"></ul>
 </div>
+<script>
+    const source = new EventSource("/Home/Stream");
+
+    source.onmessage = (event) => {
+        const metric = JSON.parse(event.data);
+        console.log("Received metric:", metric);
+        const li = document.createElement("li");
+        li.textContent =
+            `${metric.Name}: ${metric.Value}% at ${metric.Timestamp}`;
+
+        document.getElementById("metrics").appendChild(li);
+    };
+
+    source.onerror = () => {
+        console.log("SSE connection lost");
+    };
+</script>
