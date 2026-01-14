@@ -1,3 +1,4 @@
+using Server_Sent_Events;
 using Server_Sent_Events.Controllers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<MetricsGenerator>();
+builder.Services.AddSingleton<SSEConnectionManager>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

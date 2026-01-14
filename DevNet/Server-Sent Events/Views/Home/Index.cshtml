@@ -5,22 +5,69 @@
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-    <ul id="metrics"></ul>
+    <ul id="messages"></ul>
+
+    <label>User Id:</label>
+    <input id="userId" value="5000" />
+
+    <button onclick="connect()">Connect</button>
+    <button onclick="send()">Send Event</button>
+    <button onclick="notify()">Notify</button>
+
 </div>
 <script>
-    const source = new EventSource("/Home/Stream");
+    let source = null;
+     function connect() {
+        const userId = document.getElementById("userId").value;
 
-    source.onmessage = (event) => {
-        const metric = JSON.parse(event.data);
-        console.log("Received metric:", metric);
-        const li = document.createElement("li");
-        li.textContent =
-            `${metric.Name}: ${metric.Value}% at ${metric.Timestamp}`;
+        if (source) {
+            source.close();
+        }
 
-        document.getElementById("metrics").appendChild(li);
-    };
+        source = new EventSource(`/Home/Stream?userId=${userId}`);
 
-    source.onerror = () => {
-        console.log("SSE connection lost");
-    };
+        source.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            const li = document.createElement("li");
+            li.textContent =
+                `${data.Name}: ${data.Value}% at ${data.Timestamp}`;
+
+            document.getElementById("messages").appendChild(li);
+        };
+
+        source.onerror = () => {
+            console.log("SSE disconnected");
+        };
+    }
+
+    function send() {
+        const userId = document.getElementById("userId").value;
+
+        fetch(`/Home/SendToUser?userId=${userId}`, {
+            method: "POST"
+        });
+    }
+
+     function notify() {
+        source = new EventSource(`/Home/StreamAll`);
+        source.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+
+            const li = document.createElement("li");
+            li.textContent =
+                `${data.Name}: ${data.Value}% at ${data.Timestamp}`;
+
+            document.getElementById("messages").appendChild(li);
+        };
+
+        source.onerror = () => {
+            console.log("SSE disconnected");
+        };
+    }
+
+    window.addEventListener("beforeunload", () => {
+        if (source) source.close();
+    });
+
 </script>
