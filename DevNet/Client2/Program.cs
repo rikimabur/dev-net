@@ -1,0 +1,40 @@
+﻿using Microsoft.AspNetCore.SignalR.Client;
+
+var connection = new HubConnectionBuilder()
+    .WithUrl("http://localhost:5235/hub?userId=5000")
+    .WithAutomaticReconnect()
+    .Build();
+
+connection.On<string, string>("ReceiveMessage", (user, message) =>
+{
+    Console.WriteLine($"Received message from {user}: {message}");
+});
+
+
+connection.Reconnected += (connectionId) =>
+{
+    Console.WriteLine($"Reconnected: {connectionId}");
+    return Task.CompletedTask;
+};
+
+connection.Closed += (error) =>
+{
+    Console.WriteLine("Connection closed.");
+    return Task.CompletedTask;
+};
+
+await connection.StartAsync();
+Console.WriteLine("Connected to SignalR hub.");
+
+Console.Write("Your name: ");
+var userName = Console.ReadLine();
+
+while (true)
+{
+    var message = Console.ReadLine();
+    if (!string.IsNullOrWhiteSpace(message))
+    {
+        Console.WriteLine($"Client 2 is sending: {message}");
+        await connection.SendAsync("SendMessage", userName, message);
+    }
+}
